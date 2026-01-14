@@ -301,3 +301,177 @@ impl<'a> Inventory<'a> {
 }
 
  */
+
+//  Problem 6 
+/*
+use std::cell::RefCell;
+use std::collections::{HashMap, VecDeque};
+use std::hash::Hash;
+use std::rc::Rc;
+
+struct CacheEntry<V> {
+    value: V,
+    access_count: u32,
+}
+
+struct LruCache<K, V>
+where
+    K: Eq + Hash + Clone,
+{
+    capacity: usize,
+    store: HashMap<K, Rc<RefCell<CacheEntry<V>>>>,
+    access_order: VecDeque<K>,
+}
+
+impl<K, V> LruCache<K, V>
+where
+    K: Eq + Hash + Clone,
+{
+    fn new(capacity: usize) -> Self {
+        LruCache {
+            capacity,
+            store: HashMap::new(),
+            access_order: VecDeque::new(),
+        }
+    }
+
+    fn get(&mut self, key: &K) -> Option<V>
+    where
+        V: Clone,
+    {
+        if let Some(entry) = self.store.get(key) {
+            // Update access count
+            {
+                let mut cache_entry = entry.borrow_mut();
+                cache_entry.access_count += 1;
+            }
+            
+            // Update LRU order - more efficient than retain
+            let key_clone = key.clone();
+            if let Some(pos) = self.access_order.iter().position(|k| k == key) {
+                self.access_order.remove(pos);
+            }
+            self.access_order.push_back(key_clone);
+            
+            // Return cloned value
+            Some(entry.borrow().value.clone())
+        } else {
+            None
+        }
+    }
+
+    fn insert(&mut self, key: K, value: V) {
+        // If key exists, update value and move to back
+        if self.store.contains_key(&key) {
+            if let Some(entry) = self.store.get(&key) {
+                entry.borrow_mut().value = value;
+            }
+            // Move to back (most recently used)
+            if let Some(pos) = self.access_order.iter().position(|k| k == &key) {
+                self.access_order.remove(pos);
+            }
+            self.access_order.push_back(key);
+            return;
+        }
+
+        // If at capacity, evict LRU
+        if self.capacity > 0 && self.store.len() >= self.capacity {
+            if let Some(oldest_key) = self.access_order.pop_front() {
+                self.store.remove(&oldest_key);
+            }
+        }
+
+        // Insert new entry
+        self.store.insert(
+            key.clone(),
+            Rc::new(RefCell::new(CacheEntry {
+                value,
+                access_count: 0,
+            })),
+        );
+        self.access_order.push_back(key);
+    }
+
+    fn remove(&mut self, key: &K) -> Option<V>
+    where
+        V: Clone,
+    {
+        // Remove from access order
+        if let Some(pos) = self.access_order.iter().position(|k| k == key) {
+            self.access_order.remove(pos);
+        }
+        
+        // Remove from store and return value
+        self.store
+            .remove(key)
+            .map(|entry| entry.borrow().value.clone())
+    }
+
+    fn clear(&mut self) {
+        self.store.clear();
+        self.access_order.clear();
+    }
+
+    fn len(&self) -> usize {
+        self.store.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.store.is_empty()
+    }
+
+    // Get most frequently accessed item
+    fn most_frequent(&self) -> Option<(K, V)>
+    where
+        K: Clone,
+        V: Clone,
+    {
+        self.store
+            .iter()
+            .max_by_key(|(_, entry)| entry.borrow().access_count)
+            .map(|(key, entry)| (key.clone(), entry.borrow().value.clone()))
+    }
+}
+
+#[test]
+fn test_lru_cache() {
+    let mut cache = LruCache::new(2);
+    
+    // Test basic insert and get
+    cache.insert("a", 1);
+    cache.insert("b", 2);
+    assert_eq!(cache.get(&"a"), Some(1));
+    assert_eq!(cache.get(&"b"), Some(2));
+    assert_eq!(cache.len(), 2);
+    assert!(!cache.is_empty());
+    
+    // Test LRU eviction
+    cache.insert("c", 3); // Should evict "a" or "b" depending on access
+    assert_eq!(cache.len(), 2);
+    
+    // Test remove
+    cache.insert("d", 4);
+    let removed = cache.remove(&"c");
+    assert!(removed.is_some());
+    assert_eq!(cache.len(), 1);
+    
+    // Test clear
+    cache.clear();
+    assert_eq!(cache.len(), 0);
+    assert!(cache.is_empty());
+    
+    // Test most frequent
+    cache.insert("x", 10);
+    cache.insert("y", 20);
+    cache.get(&"x");
+    cache.get(&"x"); // x accessed twice
+    cache.get(&"y"); // y accessed once
+    let most_freq = cache.most_frequent();
+    assert_eq!(most_freq, Some(("x".to_string(), 10)));
+    
+    // Test capacity zero
+    let mut zero_cache = LruCache::new(0);
+    zero_cache.insert("z", 100);
+    assert_eq!(zero_cache.len(), 0); // Cannot insert into zero-capacity cache
+}
+*/
