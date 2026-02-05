@@ -1,5 +1,5 @@
 /**
- * LRUCache Concept :
+ * LRUCache :
 1. capacity : number of node inside it
 2. nodes : storing cache data in linked list structure
 3. map : pair key and index
